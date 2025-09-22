@@ -1,0 +1,2 @@
+# stocktack
+Aplicación de inventario
