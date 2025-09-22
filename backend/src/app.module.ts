@@ -1,11 +1,10 @@
 import { Module } from '@nestjs/common';
-import { AppController } from '@/app.controller';
-import { AppService } from '@/app.service';
 import { AuthModule } from '@/module/auth/auth.module';
 import { ProductsModule } from '@/module/products/products.module';
 import { CommonModule } from '@/common/common.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { User } from './module/auth/entities/user.entity';
 
 @Module({
   imports: [
@@ -22,7 +21,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
         username: configService.get('DB_USERNAME'),
         password: configService.get('DB_PASSWORD'),
         database: configService.get('DB_NAME'),
-        entities: [],
+        entities: [User],
         synchronize: true,
       }),
       inject: [ConfigService],
@@ -31,7 +30,5 @@ import { TypeOrmModule } from '@nestjs/typeorm';
     ProductsModule,
     CommonModule,
   ],
-  controllers: [AppController],
-  providers: [AppService],
 })
 export class AppModule {}
