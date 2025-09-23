@@ -25,5 +25,5 @@ export class CreateUserDto {
   @IsEnum(userRoles, {
     message: 'rol must be a valid user role [user, admin]',
   })
-  rol: userRoles;
+  rol?: userRoles;
 }
