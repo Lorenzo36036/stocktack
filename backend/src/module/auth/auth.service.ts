@@ -1,56 +1,46 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   BadRequestException,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { CreateUserDto, UpdateUserDto, LoginUserDto } from './dto/index';
-import { Repository } from 'typeorm';
-import { InjectRepository } from '@nestjs/typeorm';
-import { User } from './entities/user.entity';
-import * as bcrypt from 'bcrypt';
+import { LoginUserDto } from './dto/login-user-auth.dto';
 import { JwtService } from '@nestjs/jwt';
+import { AuthenticatedUser } from '@/common/interfaces/login';
+import { UserService } from '../user/user.service';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class AuthService {
   constructor(
-    @InjectRepository(User)
-    private readonly userRepository: Repository<User>,
+    private readonly userService: UserService,
     private readonly jwtService: JwtService,
   ) {}
-  async createUser(createAuthDto: CreateUserDto) {
-    try {
-      createAuthDto.password = await bcrypt.hash(createAuthDto.password, 10);
-      await this.userRepository.save(createAuthDto);
-      return createAuthDto;
-    } catch (error) {
-      console.log(error);
-    }
-  }
-  async singIn(loginUserDto: LoginUserDto) {
+
+  async validateUser(loginUserDto: LoginUserDto) {
     const { email, password } = loginUserDto;
-    const user = await this.userRepository.findOne({
-      where: { email },
-      select: {
-        uuid: true,
-        username: true,
-        email: true,
-        password: true,
-      },
-    });
+    const user = await this.userService.findOneBy('email', email);
 
     if (!user) throw new BadRequestException('user not found');
 
     if (!this.verificationLogin(password, user.password))
       throw new UnauthorizedException('password incorrect');
 
-    const payload = { uuid: user.uuid };
     return {
-      token: this.jwtService.sign(payload),
+      uuid: user.uuid,
+      username: user.username,
+      email: user.email,
+    };
+  }
+
+  async login(authenticatedUser: AuthenticatedUser) {
+    const token = await this.jwtService.signAsync({
+      uuid: authenticatedUser.uuid,
+    });
+    return {
+      message: 'user logged in successfully',
       user: {
-        uuid: user.uuid,
-        username: user.username,
-        email: user.email,
+        username: authenticatedUser.username,
+        token: token,
       },
     };
   }
@@ -58,21 +48,5 @@ export class AuthService {
   verificationLogin(password: string, hash: string) {
     const isMatch = bcrypt.compareSync(password, hash);
     return isMatch;
-  }
-
-  findAll() {
-    return `This action returns all auth`;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} auth`;
-  }
-
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return updateUserDto;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} auth`;
   }
 }
