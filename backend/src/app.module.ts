@@ -4,7 +4,8 @@ import { ProductsModule } from '@/module/products/products.module';
 import { CommonModule } from '@/common/common.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { User } from './module/auth/entities/user.entity';
+import { User } from './module/user/entity/user.entity';
+import { UserModule } from './module/user/user.module';
 
 @Module({
   imports: [
@@ -29,6 +30,8 @@ import { User } from './module/auth/entities/user.entity';
     AuthModule,
     ProductsModule,
     CommonModule,
+    UserModule,
   ],
+  providers: [],
 })
 export class AppModule {}
