@@ -1,34 +1,23 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import { ExtractJwt, Strategy } from 'passport-jwt';
+/* eslint-disable @typescript-eslint/no-misused-promises */
+import { Strategy } from 'passport-local';
 import { PassportStrategy } from '@nestjs/passport';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { jwtConstants } from './../../const/constants';
-import { InjectRepository } from '@nestjs/typeorm';
-import { User } from '../entities/user.entity';
-import { Repository } from 'typeorm';
+import { AuthService } from './../auth.service';
 
 @Injectable()
 export class LocalStrategy extends PassportStrategy(Strategy) {
-  constructor(
-    @InjectRepository(User)
-    private usersRepository: Repository<User>,
-  ) {
+  constructor(private authService: AuthService) {
     super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      ignoreExpiration: false,
-      secretOrKey: jwtConstants.secret,
+      usernameField: 'email',
+      passwordField: 'password',
     });
   }
 
-  async validate(payload: any): Promise<any> {
-    const user = await this.usersRepository.findOne({
-      where: { uuid: payload.uuid },
-    });
+  validate(email: string, password: string): any {
+    const user = this.authService.validateUser({ email, password });
     if (!user) {
-      throw new UnauthorizedException('User not found');
+      throw new UnauthorizedException('Invalid credentials');
     }
-
     return user;
   }
 }
