@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { LoginUserDto } from './dto/login-user-auth.dto';
 import { JwtService } from '@nestjs/jwt';
-import { AuthenticatedUser } from '@/common/interfaces/login';
+import { AuthenticatedUserParams } from '@/common/interfaces/login';
 import { UserService } from '../user/user.service';
 import * as bcrypt from 'bcrypt';
 
@@ -21,18 +21,20 @@ export class AuthService {
     const user = await this.userService.findOneBy('email', email);
 
     if (!user) throw new BadRequestException('user not found');
-
-    if (!this.verificationLogin(password, user.password))
+    if (!user.isActive) throw new UnauthorizedException('user not exist');
+    if (user.password && !this.verificationLogin(password, user.password))
       throw new UnauthorizedException('password incorrect');
 
     return {
       uuid: user.uuid,
       username: user.username,
       email: user.email,
+      role: user.roles,
+      active: user.isActive,
     };
   }
 
-  async login(authenticatedUser: AuthenticatedUser) {
+  async login(authenticatedUser: AuthenticatedUserParams) {
     const token = await this.jwtService.signAsync({
       uuid: authenticatedUser.uuid,
     });
