@@ -10,14 +10,21 @@ import {
 import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
+import { Auth } from '../auth/decorators/auth.decorator';
+import { Role } from '../auth/decorators/interface/role.enum';
+import { GetUser } from '@/common/decorators/getUser';
 
 @Controller('products')
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
+  @Auth(Role.user)
   @Post()
-  create(@Body() createProductDto: CreateProductDto) {
-    return this.productsService.create(createProductDto);
+  create(
+    @Body() createProductDto: CreateProductDto,
+    @GetUser('uuid') userUuid: string,
+  ) {
+    return this.productsService.create(createProductDto, userUuid);
   }
 
   @Get()
